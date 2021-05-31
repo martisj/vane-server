@@ -9,6 +9,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sanity/client": "^2.10.5",
     "fastify": "^3.17.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.12.1",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.0.0"
   }
 }
