@@ -2,21 +2,27 @@
   "name": "vane-server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "main": "server.js",
   "scripts": {
+    "start": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@sanity/client": "^2.10.5",
-    "fastify": "^3.17.0"
+    "fastify": "^3.17.0",
+    "fastify-cors": "^6.0.1"
   },
   "devDependencies": {
+    "@asbjorn/eslint-plugin-groq": "^1.0.0",
     "eslint": "^7.12.1",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.0.0"
+    "eslint-plugin-promise": "^5.0.0",
+    "groq": "^2.2.6",
+    "nodemon": "^2.0.7"
   }
 }

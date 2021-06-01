@@ -4,6 +4,7 @@ module.exports = {
     node: true
   },
   extends: [
+    'plugin:@asbjorn/groq/recommended',
     'standard'
   ],
   parserOptions: {
