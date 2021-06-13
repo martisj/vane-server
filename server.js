@@ -14,16 +14,31 @@ server.get('/vanes', async function () {
 })
 
 server.post('/vane', {
-  preHandler: async function (request) {
-    const { vane } = request.body
-    if (!vane) {
-      throw new Error('Invalid Vane')
+  schema: {
+    body: {
+      type: 'object',
+      required: ['title'],
+      additionalProperties: false,
+      properties: {
+        title: { type: 'string' }
+      }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        _id: { type: 'string' }
+      }
     }
   }
 }, async function (request) {
-  const { vane } = request.body
+  const { title } = request.body
+  console.log(title)
 
-  const doc = await client.create({ _type: 'vane', title: vane })
+  const doc = await client.create({ _type: 'vane', title })
+  console.log(doc)
   return doc
 })
 
