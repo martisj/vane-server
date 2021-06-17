@@ -35,10 +35,8 @@ server.post('/vane', {
   }
 }, async function (request) {
   const { title } = request.body
-  console.log(title)
 
   const doc = await client.create({ _type: 'vane', title })
-  console.log(doc)
   return doc
 })
 
