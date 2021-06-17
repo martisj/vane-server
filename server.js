@@ -42,7 +42,7 @@ server.post('/vane', {
   return doc
 })
 
-server.delete('/vane:id', {
+server.delete('/vane/:id', {
   response: {
     204: {}
   }
