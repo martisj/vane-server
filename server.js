@@ -42,6 +42,19 @@ server.post('/vane', {
   return doc
 })
 
+server.delete('/vane:id', {
+  response: {
+    204: {}
+  }
+}, async function (request) {
+  const { id } = request.params
+  console.log(id)
+
+  const apiResponse = await client.delete(id)
+  console.log(apiResponse)
+  return {}
+})
+
 async function start () {
   try {
     await server.listen(3001)
