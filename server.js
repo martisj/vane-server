@@ -6,7 +6,7 @@ import cors from 'fastify-cors'
 const server = Fastify({ logger: true })
 server.register(cors, { origin: ['http://localhost:3000', 'http://localhost:3001'], credentials: true, optionsSuccessStatus: 200 })
 
-const vanesQuery = groq`*[_type == 'vane']`
+const vanesQuery = groq`*[_type == 'vane'] | order(_createdAt desc)`
 
 server.get('/vanes', async function () {
   const vanes = await client.fetch(vanesQuery)
