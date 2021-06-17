@@ -46,13 +46,17 @@ server.delete('/vane/:id', {
   response: {
     204: {}
   }
-}, async function (request) {
+}, async function (request, reply) {
   const { id } = request.params
-  console.log(id)
 
-  const apiResponse = await client.delete(id)
-  console.log(apiResponse)
-  return {}
+  try {
+    await client.delete(id)
+    reply.status(204)
+    return {}
+  } catch (e) {
+    reply.status(404)
+    return { error: 'not found' }
+  }
 })
 
 async function start () {
