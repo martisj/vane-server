@@ -3,6 +3,7 @@ lockfileVersion: 5.3
 specifiers:
   '@asbjorn/eslint-plugin-groq': ^1.0.0
   '@sanity/client': ^2.10.5
+  dayjs: ^1.10.5
   eslint: ^7.12.1
   eslint-config-standard: ^16.0.3
   eslint-plugin-import: ^2.22.1
@@ -11,13 +12,16 @@ specifiers:
   fastify: ^3.17.0
   fastify-cors: ^6.0.1
   groq: ^0.142.0
+  nanoid: ^3.1.23
   nodemon: ^2.0.7
   standard: ^16.0.3
 
 dependencies:
   '@sanity/client': 2.10.5
+  dayjs: 1.10.5
   fastify: 3.17.0
   fastify-cors: 6.0.1
+  nanoid: 3.1.23
 
 devDependencies:
   '@asbjorn/eslint-plugin-groq': 1.0.0_groq@0.142.0
@@ -521,6 +525,10 @@ packages:
     resolution: {integrity: sha512-v1plID3y9r/lPhviJ1wrXpLeyUIGAZ2SHNYTEapm7/8A9nLPoyvVp3RK/EPFqn5kEznyWgYZNsRtYYIWbuG8KA==}
     engines: {node: '>=8'}
     dev: true
+
+  /dayjs/1.10.5:
+    resolution: {integrity: sha512-BUFis41ikLz+65iH6LHQCDm4YPMj5r1YFLdupPIyM4SGcXMmtiLQ7U37i+hGS8urIuqe7I/ou3IS1jVc4nbN4g==}
+    dev: false
 
   /debug/2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -1868,6 +1876,12 @@ packages:
 
   /nano-pubsub/1.0.2:
     resolution: {integrity: sha1-NM53b3r5WZFbj3rP6N1rnGbzvek=}
+    dev: false
+
+  /nanoid/3.1.23:
+    resolution: {integrity: sha512-FiB0kzdP0FFVGDKlRLEQ1BgDzU87dy5NnzjeW9YZNt+/c3+q82EQDUwniSAUxp/F0gFNI1ZhKU1FqYsMuqZVnw==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
     dev: false
 
   /natural-compare/1.4.0:
