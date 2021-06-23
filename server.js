@@ -94,6 +94,38 @@ async function (request, reply) {
   }
 })
 
+server.post('/vane/unlog', {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['vaneId', 'day'],
+      additionalProperties: false,
+      properties: {
+        vaneId: { type: 'string' },
+        day: { type: 'string' }
+      }
+    }
+  },
+  response: {
+    200: {}
+  }
+},
+async function (request, reply) {
+  const { vaneId, day } = request.body
+  const date = dayjs(day)
+  try {
+    const update = await client.patch(vaneId).unset([`log[day == "${date.format('YYYY-MM-DD')}"]`]).commit()
+    console.log(update)
+    return { vaneId, message: 'unlogged' }
+  } catch (e) {
+    console.error(e)
+    reply.status(400)
+    return {
+      error: "Can't track vane"
+    }
+  }
+})
+
 async function start () {
   try {
     await server.listen(3001)
