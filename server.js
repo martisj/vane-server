@@ -1,16 +1,31 @@
 import Fastify from 'fastify'
+import fastifyMultipart from 'fastify-multipart'
 import groq from 'groq'
 import { client } from './sanityClient.js'
 import cors from 'fastify-cors'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
+import { parse } from '@fast-csv/parse'
+import { pipeline } from 'stream'
+import { promisify } from 'util'
+const pump = promisify(pipeline)
 
 const server = Fastify({ logger: true })
 server.register(cors, { origin: ['http://localhost:3000', 'http://localhost:3001'], credentials: true, optionsSuccessStatus: 200 })
+server.register(fastifyMultipart, {
+  limits: {
+    fieldNameSize: 100, // Max field name size in bytes
+    fieldSize: 100, // Max field value size in bytes
+    fields: 10, // Max number of non-file fields
+    fileSize: 10000000, // For multipart forms, the max file size in bytes
+    files: 1, // Max number of file fields
+    headerPairs: 2000 // Max number of header key=>value pairs
+  }
+})
 
 const vanesQuery = groq`*[_type == 'vane' && !(_id in path('drafts.**'))] | order(_createdAt desc)`
 
-server.get('/vanes', async function () {
+server.get('/vanes', async function getVanes () {
   const vanes = await client.fetch(vanesQuery)
   return { vanes }
 })
@@ -35,7 +50,7 @@ server.post('/vane', {
       }
     }
   }
-}, async function (request) {
+}, async function postVane (request) {
   const { title } = request.body
 
   const doc = await client.create({ _type: 'vane', title })
@@ -46,7 +61,7 @@ server.delete('/vane/:id', {
   response: {
     204: {}
   }
-}, async function (request, reply) {
+}, async function deleteVaneById (request, reply) {
   const { id } = request.params
 
   try {
@@ -75,7 +90,7 @@ server.post('/vane/log', {
     200: {}
   }
 },
-async function (request, reply) {
+async function postVaneLog (request, reply) {
   const timestamp = dayjs()
   const { vaneId, day } = request.body
   const date = dayjs(day)
@@ -110,7 +125,7 @@ server.post('/vane/unlog', {
     200: {}
   }
 },
-async function (request, reply) {
+async function postVaneUnlog (request, reply) {
   const { vaneId, day } = request.body
   const date = dayjs(day)
   try {
@@ -123,6 +138,46 @@ async function (request, reply) {
     return {
       error: "Can't track vane"
     }
+  }
+})
+
+server.post('/data/import', async function postDataImport (req, res) {
+  try {
+    const data = await req.file()
+    const transaction = client.transaction()
+    const csvStream = parse({ headers: true })
+      .transform((data) => {
+        return Object.keys(data).reduce((acc, curr) => {
+          if (curr === '' || data[curr] === '') return acc
+          const d = dayjs(curr, 'DD MMM YYYY')
+          if (d.isValid()) {
+            acc.log = acc.log || []
+            if (data[curr] === 'TRUE') {
+                acc.log.push({ _key: nanoid(), timestamp: dayjs().toISOString(), day: d.format('YYYY-MM-DD') })
+            }
+          } else {
+            acc[curr] = data[curr]
+          }
+          return acc
+        }, {})
+      })
+      .on('error', error => console.error(error))
+      .on('data', row => {
+        console.log(row)
+        transaction.create({ _type: 'vane', title: row.HABIT, log: row.log })
+      })
+      .on('end', (rowCount) => {
+        transaction.commit().then((transactionRes) => {
+          console.log('parsed and created all habits')
+          res.send(`Parsed ${rowCount} rows`)
+        })
+          .catch((err) => {
+            console.error('Transaction failed: ', err.message)
+          })
+      })
+    await pump(data.file, csvStream)
+  } catch (e) {
+    res.send('CSV is not valid')
   }
 })
 
