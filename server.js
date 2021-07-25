@@ -1,32 +1,57 @@
 import Fastify from 'fastify'
 import fastifyMultipart from 'fastify-multipart'
+import fastifyEnv from 'fastify-env'
 import groq from 'groq'
-import { client } from './sanityClient.js'
 import cors from 'fastify-cors'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { parse } from '@fast-csv/parse'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-const pump = promisify(pipeline)
+import sanity from '@sanity/client'
 
+const pump = promisify(pipeline)
+let sanityClient
 const server = Fastify({ logger: true })
-server.register(cors, { origin: ['http://localhost:3000', 'http://localhost:3001'], credentials: true, optionsSuccessStatus: 200 })
-server.register(fastifyMultipart, {
-  limits: {
-    fieldNameSize: 100, // Max field name size in bytes
-    fieldSize: 100, // Max field value size in bytes
-    fields: 10, // Max number of non-file fields
-    fileSize: 10000000, // For multipart forms, the max file size in bytes
-    files: 1, // Max number of file fields
-    headerPairs: 2000 // Max number of header key=>value pairs
-  }
-})
+server
+  .register(fastifyEnv, {
+    dotenv: true,
+    schema: {
+      type: 'object',
+      required: ['SANITY_TOKEN', 'ENVIRONMENT'],
+      properties: {
+        SANITY_TOKEN: { type: 'string' },
+        ENVIRONMENT: { type: 'string', default: 'development' }
+      }
+    }
+  })
+  .register(cors, { origin: ['http://localhost:3000', 'http://localhost:3001'], credentials: true, optionsSuccessStatus: 200 })
+  .register(fastifyMultipart, {
+    limits: {
+      fieldNameSize: 100, // Max field name size in bytes
+      fieldSize: 100, // Max field value size in bytes
+      fields: 10, // Max number of non-file fields
+      fileSize: 10000000, // For multipart forms, the max file size in bytes
+      files: 1, // Max number of file fields
+      headerPairs: 2000 // Max number of header key=>value pairs
+    }
+  })
+  .ready((err) => {
+    if (err) console.error(err)
+
+    sanityClient = sanity({
+      apiVersion: 'v2021-03-25',
+      projectId: 'k4ho43fa',
+      dataset: server.config.ENVIRONMENT,
+      token: server.config.SANITY_TOKEN,
+      useCdn: false
+    })
+  })
 
 const vanesQuery = groq`*[_type == 'vane' && !(_id in path('drafts.**'))] | order(_createdAt desc)`
 
 server.get('/vanes', async function getVanes () {
-  const vanes = await client.fetch(vanesQuery)
+  const vanes = await sanityClient.fetch(vanesQuery)
   return { vanes }
 })
 
@@ -53,7 +78,7 @@ server.post('/vane', {
 }, async function postVane (request) {
   const { title } = request.body
 
-  const doc = await client.create({ _type: 'vane', title })
+  const doc = await sanityClient.create({ _type: 'vane', title })
   return doc
 })
 
@@ -65,7 +90,7 @@ server.delete('/vane/:id', {
   const { id } = request.params
 
   try {
-    await client.delete(id)
+    await sanityClient.delete(id)
     reply.status(204)
     return {}
   } catch (e) {
@@ -95,7 +120,7 @@ async function postVaneLog (request, reply) {
   const { vaneId, day } = request.body
   const date = dayjs(day)
   try {
-    const update = await client.patch(vaneId).setIfMissing({ log: [] }).append(
+    const update = await sanityClient.patch(vaneId).setIfMissing({ log: [] }).append(
       'log', [{ _key: nanoid(), timestamp: timestamp.toISOString(), day: date.format('YYYY-MM-DD') }]
     ).commit()
     console.log(update)
@@ -129,7 +154,7 @@ async function postVaneUnlog (request, reply) {
   const { vaneId, day } = request.body
   const date = dayjs(day)
   try {
-    const update = await client.patch(vaneId).unset([`log[day == "${date.format('YYYY-MM-DD')}"]`]).commit()
+    const update = await sanityClient.patch(vaneId).unset([`log[day == "${date.format('YYYY-MM-DD')}"]`]).commit()
     console.log(update)
     return { vaneId, message: 'unlogged' }
   } catch (e) {
@@ -144,7 +169,7 @@ async function postVaneUnlog (request, reply) {
 server.post('/data/import', async function postDataImport (req, res) {
   try {
     const data = await req.file()
-    const transaction = client.transaction()
+    const transaction = sanityClient.transaction()
     const csvStream = parse({ headers: true })
       .transform((data) => {
         return Object.keys(data).reduce((acc, curr) => {
@@ -153,7 +178,7 @@ server.post('/data/import', async function postDataImport (req, res) {
           if (d.isValid()) {
             acc.log = acc.log || []
             if (data[curr] === 'TRUE') {
-                acc.log.push({ _key: nanoid(), timestamp: dayjs().toISOString(), day: d.format('YYYY-MM-DD') })
+              acc.log.push({ _key: nanoid(), timestamp: dayjs().toISOString(), day: d.format('YYYY-MM-DD') })
             }
           } else {
             acc[curr] = data[curr]
