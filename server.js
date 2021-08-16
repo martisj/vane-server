@@ -120,10 +120,9 @@ async function postVaneLog (request, reply) {
   const { vaneId, day } = request.body
   const date = dayjs(day)
   try {
-    const update = await sanityClient.patch(vaneId).setIfMissing({ log: [] }).append(
+    await sanityClient.patch(vaneId).setIfMissing({ log: [] }).append(
       'log', [{ _key: nanoid(), timestamp: timestamp.toISOString(), day: date.format('YYYY-MM-DD') }]
     ).commit()
-    console.log(update)
     return { vaneId, message: 'logged' }
   } catch (e) {
     console.error(e)
@@ -188,12 +187,10 @@ server.post('/data/import', async function postDataImport (req, res) {
       })
       .on('error', error => console.error(error))
       .on('data', row => {
-        console.log(row)
         transaction.create({ _type: 'vane', title: row.HABIT, log: row.log })
       })
       .on('end', (rowCount) => {
         transaction.commit().then((transactionRes) => {
-          console.log('parsed and created all habits')
           res.send(`Parsed ${rowCount} rows`)
         })
           .catch((err) => {
