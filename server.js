@@ -12,6 +12,7 @@ import sanity from '@sanity/client'
 import pino from 'pino'
 import session from 'fastify-secure-session'
 import grant from 'grant'
+import got from 'got'
 
 const pump = promisify(pipeline)
 let sanityClient
@@ -62,6 +63,9 @@ async function init () {
       github: {
         key: fastify.config.GITHUB_OAUTH_CLIENT_ID,
         secret: fastify.config.GITHUB_OAUTH_CLIENT_SECRET
+        // scope: ['openid'],
+        // nonce: true,
+        // response: ['tokens', 'profile']
         // scope - array of OAuth scopes to request
         // nonce - generate random nonce string (OpenID Connect only)
         // custom_params - custom authorization parameters
@@ -98,15 +102,20 @@ init()
 const vanesQuery = groq`*[_type == 'vane' && !(_id in path('drafts.**'))] | order(_createdAt desc)`
 
 function routes () {
-  fastify.get('/hello', async function (req, res) {
-    res.send(JSON.stringify(req.session.grant.response, null, 2))
+  fastify.get('/connect/github/callback', async function getGithubCallback (request, reply) {
+    // const token = await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
+    console.log(request.session)
+    if (request.query.code) {
+      reply.redirect('/hello')
+    } else {
+      reply.send('wrong code')
+    }
   })
 
-  // fastify.get('/login/github/callback', async function getGithubCallback (request, reply) {
-  //   const token = await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
-  //   console.log(token)
-  //   reply.send({ access_token: token.access_token })
-  // })
+  fastify.get('/hello', async function hello (request, reply) {
+    // const response = await got(request.session.grant.response)
+    reply.send(request.session.grant.response)
+  })
 
   fastify.get('/vanes', async function getVanes () {
     const vanes = await sanityClient.fetch(vanesQuery)

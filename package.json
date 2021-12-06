@@ -21,6 +21,7 @@
     "fastify-multipart": "^5.1.0",
     "fastify-secure-session": "^3.0.0",
     "fastify-session": "^5.2.1",
+    "got": "^11.8.2",
     "grant": "^5.4.18",
     "nanoid": "^3.1.30",
     "pino": "^7.2.0",
