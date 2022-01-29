@@ -25,7 +25,7 @@ server
       }
     }
   })
-  .register(cors, { origin: ['http://localhost:3000', 'http://localhost:3001'], credentials: true, optionsSuccessStatus: 200 })
+  .register(cors, { origin: ['http://localhost:3011', 'http://localhost:3012'], credentials: true, optionsSuccessStatus: 200 })
   .register(fastifyMultipart, {
     limits: {
       fieldNameSize: 100, // Max field name size in bytes
@@ -70,7 +70,6 @@ server.post('/vane', {
     200: {
       type: 'object',
       properties: {
-        title: { type: 'string' },
         _id: { type: 'string' }
       }
     }
@@ -84,7 +83,14 @@ server.post('/vane', {
 
 server.delete('/vane/:id', {
   response: {
-    204: {}
+    200: {
+      type: 'object',
+      properties: {
+        vaneId: {
+          type: 'string'
+        }
+      }
+    }
   }
 }, async function deleteVaneById (request, reply) {
   const { id } = request.params
@@ -120,10 +126,11 @@ async function postVaneLog (request, reply) {
   const { vaneId, day } = request.body
   const date = dayjs(day)
   try {
-    await sanityClient.patch(vaneId).setIfMissing({ log: [] }).append(
+    const doc = await sanityClient.patch(vaneId).setIfMissing({ log: [] }).append(
       'log', [{ _key: nanoid(), timestamp: timestamp.toISOString(), day: date.format('YYYY-MM-DD') }]
     ).commit()
-    return { vaneId, message: 'logged' }
+    console.log(doc)
+    return { vaneId, log: doc.log, message: 'logged' }
   } catch (e) {
     console.error(e)
     reply.status(400)
@@ -160,7 +167,7 @@ async function postVaneUnlog (request, reply) {
     console.error(e)
     reply.status(400)
     return {
-      error: "Can't track vane"
+      error: "Can't untrack vane"
     }
   }
 })
@@ -205,7 +212,7 @@ server.post('/data/import', async function postDataImport (req, res) {
 
 async function start () {
   try {
-    await server.listen(3001)
+    await server.listen(3012)
   } catch (err) {
     server.log.error(err)
     process.exit(1)
