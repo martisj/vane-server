@@ -1,11 +1,12 @@
 {
   "name": "vane-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Server for Vanes",
   "type": "module",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "nodemon src/server.js",
+    "debug": "nodemon --inspect src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -19,6 +20,7 @@
     "fastify-env": "2.1.1",
     "fastify-multipart": "4.0.7",
     "fastify-oauth2": "4.5.0",
+    "got": "12.0.1",
     "nanoid": "3.1.23"
   },
   "devDependencies": {
@@ -30,6 +32,7 @@
     "eslint-plugin-promise": "5.0.0",
     "groq": "0.142.0",
     "nodemon": "2.0.7",
+    "pino-pretty": "7.5.1",
     "standard": "16.0.3"
   }
 }

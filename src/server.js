@@ -9,23 +9,39 @@ import { parse } from '@fast-csv/parse'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
 import sanity from '@sanity/client'
+import oauthPlugin from 'fastify-oauth2'
+import got from 'got'
 
 const pump = promisify(pipeline)
 let sanityClient
-const server = Fastify({ logger: true })
+const server = Fastify({
+  logger: {
+    prettyPrint: {
+      translateTime: 'HH:MM:ss Z',
+      ignore: 'pid,hostname'
+    }
+  }
+})
+
 server
   .register(fastifyEnv, {
     dotenv: true,
     schema: {
       type: 'object',
-      required: ['SANITY_TOKEN', 'ENVIRONMENT'],
+      required: ['SANITY_TOKEN', 'ENVIRONMENT', 'GITHUB_OAUTH_CLIENT_ID', 'GITHUB_OAUTH_CLIENT_SECRET', 'BASE_URL'],
       properties: {
         SANITY_TOKEN: { type: 'string' },
-        ENVIRONMENT: { type: 'string', default: 'development' }
+        ENVIRONMENT: { type: 'string', default: 'development' },
+        GITHUB_OAUTH_CLIENT_ID: { type: 'string' },
+        GITHUB_OAUTH_CLIENT_SECRET: { type: 'string' },
+        PORT: { type: 'string', default: '3012' },
+        BASE_URL: { type: 'string' }
       }
     }
   })
-  .register(cors, { origin: ['http://localhost:3011', 'http://localhost:3012'], credentials: true, optionsSuccessStatus: 200 })
+server.register(cors, function () {
+  return { origin: ['http://localhost:3011', server.config.BASE_URL], credentials: true, optionsSuccessStatus: 200 }
+})
   .register(fastifyMultipart, {
     limits: {
       fieldNameSize: 100, // Max field name size in bytes
@@ -34,6 +50,20 @@ server
       fileSize: 10000000, // For multipart forms, the max file size in bytes
       files: 1, // Max number of file fields
       headerPairs: 2000 // Max number of header key=>value pairs
+    }
+  })
+  .register(oauthPlugin, function () {
+    return {
+      name: 'githubOAuth2',
+      credentials: {
+        client: {
+          id: server.config.GITHUB_OAUTH_CLIENT_ID,
+          secret: server.config.GITHUB_OAUTH_CLIENT_SECRET
+        },
+        auth: oauthPlugin.GITHUB_CONFIGURATION
+      },
+      startRedirectPath: '/login/github',
+      callbackUri: `${server.config.BASE_URL}/login/github/callback`
     }
   })
   .ready((err) => {
@@ -49,6 +79,24 @@ server
   })
 
 const vanesQuery = groq`*[_type == 'vane' && !(_id in path('drafts.**'))] | order(_createdAt desc)`
+const userQuery = groq`*[_type == 'user' && !(_id in path('drafts.**')) && github_id == $githubId]`
+
+server.get('/login/github/callback', async function loginGithubCb (request) {
+  const token = await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
+  const { id } = await got.get('https://api.github.com/user', {
+    headers: { Authorization: `token ${token.access_token}` }
+  }).json()
+
+  if (!id) throw new Error('User id not found from Github')
+  console.log('find user id in sanity', id)
+  let user = await sanityClient.fetch(userQuery, { githubId: id })
+
+  if (!user) {
+    user = await User.createUserFromGithub(id, token.access_token)
+  }
+
+  return (user)
+})
 
 server.get('/vanes', async function getVanes () {
   const vanes = await sanityClient.fetch(vanesQuery)
@@ -212,7 +260,8 @@ server.post('/data/import', async function postDataImport (req, res) {
 
 async function start () {
   try {
-    await server.listen(3012)
+    await server.ready()
+    await server.listen(server.config.PORT)
   } catch (err) {
     server.log.error(err)
     process.exit(1)
