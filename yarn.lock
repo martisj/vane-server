@@ -1132,7 +1132,7 @@ fastify-multipart@^4.0.7:
     hexoid "^1.0.0"
     stream-wormhole "^1.1.0"
 
-fastify-oauth2@^4.5.0:
+fastify-oauth2@4.5.0:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/fastify-oauth2/-/fastify-oauth2-4.5.0.tgz#961def002191f1b6efc217319812e36b1a5aab71"
   integrity sha512-22vqp+GK5B5zER/qqqm1YySjZkK22fRRtmBElTJzsFATAIHKLfmHwoZ4zh/vUpiOjLLEb4iQ+xtHg+D8jtxwmQ==
