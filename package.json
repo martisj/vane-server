@@ -11,25 +11,25 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@fast-csv/parse": "^4.3.6",
-    "@sanity/client": "^2.10.5",
-    "dayjs": "^1.10.5",
-    "fastify": "^3.17.0",
-    "fastify-cors": "^6.0.1",
-    "fastify-env": "^2.1.1",
-    "fastify-multipart": "^4.0.7",
+    "@fast-csv/parse": "4.3.6",
+    "@sanity/client": "2.10.5",
+    "dayjs": "1.10.5",
+    "fastify": "3.17.0",
+    "fastify-cors": "6.0.1",
+    "fastify-env": "2.1.1",
+    "fastify-multipart": "4.0.7",
     "fastify-oauth2": "4.5.0",
-    "nanoid": "^3.1.23"
+    "nanoid": "3.1.23"
   },
   "devDependencies": {
-    "@asbjorn/eslint-plugin-groq": "^1.0.0",
-    "eslint": "^7.12.1",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.0.0",
-    "groq": "^0.142.0",
-    "nodemon": "^2.0.7",
-    "standard": "^16.0.3"
+    "@asbjorn/eslint-plugin-groq": "1.0.0",
+    "eslint": "7.12.1",
+    "eslint-config-standard": "16.0.3",
+    "eslint-plugin-import": "2.22.1",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-promise": "5.0.0",
+    "groq": "0.142.0",
+    "nodemon": "2.0.7",
+    "standard": "16.0.3"
   }
 }
