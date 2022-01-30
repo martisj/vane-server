@@ -20,10 +20,8 @@ export default async function routes (fastify, options, done) {
     }).json()
 
     if (!id) throw new Error('User id not found from Github')
-    console.log('find user id in sanity', id)
     let user = await fastify.sanity.fetch(userQuery, { githubId: id })
 
-    console.log('user in sanity', user)
     if (!user) {
       const UserService = new User(fastify)
       user = await UserService.createUserFromGithub(id, token.access_token)
@@ -111,7 +109,6 @@ export default async function routes (fastify, options, done) {
       const doc = await fastify.sanity.patch(vaneId).setIfMissing({ log: [] }).append(
         'log', [{ _key: nanoid(), timestamp: timestamp.toISOString(), day: date.format('YYYY-MM-DD') }]
       ).commit()
-      console.log(doc)
       return { vaneId, log: doc.log, message: 'logged' }
     } catch (e) {
       console.error(e)
@@ -143,7 +140,6 @@ export default async function routes (fastify, options, done) {
     const date = dayjs(day)
     try {
       const update = await fastify.sanity.patch(vaneId).unset([`log[day == "${date.format('YYYY-MM-DD')}"]`]).commit()
-      console.log(update)
       return { vaneId, message: 'unlogged' }
     } catch (e) {
       console.error(e)
