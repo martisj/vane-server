@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
-    "module": "es6",
+    "module": "commonjs",
     "target": "es6",
-    "baseUrl": "./src",
-    "checkJs": true
+    "noEmit": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "typeAcquisition": {
+    "exclude": ["fast-safe-stringify", "got"]
+  }
 }
