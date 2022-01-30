@@ -139,7 +139,7 @@ export default async function routes (fastify, options, done) {
     const { vaneId, day } = request.body
     const date = dayjs(day)
     try {
-      const update = await fastify.sanity.patch(vaneId).unset([`log[day == "${date.format('YYYY-MM-DD')}"]`]).commit()
+      await fastify.sanity.patch(vaneId).unset([`log[day == "${date.format('YYYY-MM-DD')}"]`]).commit()
       return { vaneId, message: 'unlogged' }
     } catch (e) {
       console.error(e)

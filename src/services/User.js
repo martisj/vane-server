@@ -9,7 +9,7 @@ export class User {
     return {
       _type: 'user',
       uid: nanoid(),
-      github_id: githubId.toString(),
+      github_id: githubId,
       auth_token: token
     }
   }
