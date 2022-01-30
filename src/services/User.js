@@ -1,6 +1,10 @@
 import { nanoid } from 'nanoid'
 
 export class User {
+  constructor (fastify) {
+    this.f = fastify
+  }
+
   static _userDoc (githubId, token) {
     return {
       _type: 'user',
@@ -10,8 +14,8 @@ export class User {
     }
   }
 
-  static async createUserFromGithub (id, token) {
-    const user = await sanityClient.create(User._userDoc(id, token))
+  async createUserFromGithub (id, token) {
+    const user = await this.f.sanity.create(User._userDoc(id, token))
     return user
   }
 }
